@@ -24,6 +24,7 @@ class WorkspaceBuildingStep:
 class WorkspaceBuilder:
     
     def __init__(self, workspace_path: Optional[Union[str, Path]] = None) -> None:
+        self.logger = Logger(name=type(self).__name__)
         # Resolve workspace path
         if workspace_path is not None:
             self.workspace_path = Path(workspace_path).resolve()
@@ -56,6 +57,8 @@ class WorkspaceBuilder:
             except OSError as exc:
                 self.logger.error(f"Failed to create workspace file '{self.workspace_path}': {exc}")
                 raise ADHDError(f"Unable to create workspace file: {self.workspace_path}") from exc
+        
+        self.steps: List[WorkspaceBuildingStep] = []
         
     def add_step(self, step: WorkspaceBuildingStep) -> None:
         if not isinstance(step, WorkspaceBuildingStep):
