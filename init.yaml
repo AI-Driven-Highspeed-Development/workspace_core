@@ -1,4 +1,8 @@
 version: 0.0.1
 folder_path: cores/workspace_core
 type: core
-requirements: []
+requirements:
+- https://github.com/AI-Driven-Highspeed-Development/Config-Manager.git
+- https://github.com/AI-Driven-Highspeed-Development/Logger-Util.git
+- https://github.com/AI-Driven-Highspeed-Development/exceptions_core.git
+repo_url: https://github.com/AI-Driven-Highspeed-Development/workspace_core.git
