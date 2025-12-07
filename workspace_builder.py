@@ -1,11 +1,8 @@
 from dataclasses import dataclass
 import json
-import os
-import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from managers.config_manager import ConfigManager
 from utils.logger_util.logger import Logger
 from cores.exceptions_core.adhd_exceptions import ADHDError
 
