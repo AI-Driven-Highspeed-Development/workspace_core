@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from utils.logger_util.logger import Logger
-from cores.exceptions_core.adhd_exceptions import ADHDError
+from logger_util import Logger
+from exceptions_core import ADHDError
 
 @dataclass
 class TargetLayer:
@@ -121,3 +121,83 @@ class WorkspaceBuilder:
             self._ensure_key(current, key, default_value[i])
             current = current[key]
         return current
+
+
+def generate_workspace_file(
+    modules_data: List[Dict[str, Any]],
+    root_path: Path,
+    workspace_path: Optional[Path] = None,
+) -> Path:
+    """Generate a VS Code workspace file from pre-filtered module data.
+    
+    This is the public API for workspace generation. The caller is responsible
+    for filtering which modules should be included based on visibility rules.
+    
+    Args:
+        modules_data: List of module dicts, each with 'path' (Path or str) key.
+                     The path should be absolute or relative to root_path.
+        root_path: The project root path (used for relative path calculation).
+        workspace_path: Optional explicit path for the workspace file.
+                       Defaults to root_path / "{root_name}.code-workspace".
+    
+    Returns:
+        Path to the generated workspace file.
+    
+    Raises:
+        ADHDError: If workspace file cannot be created or written.
+    """
+    logger = Logger(name="generate_workspace_file")
+    root_path = Path(root_path).resolve()
+    
+    if workspace_path is None:
+        workspace_path = root_path / f"{root_path.name}.code-workspace"
+    else:
+        workspace_path = Path(workspace_path).resolve()
+    
+    folder_entries: List[Dict[str, str]] = []
+    seen_paths: set[str] = set()
+    
+    for module in modules_data:
+        module_path = module.get("path")
+        if module_path is None:
+            continue
+        
+        module_path = Path(module_path)
+        if not module_path.is_absolute():
+            module_path = root_path / module_path
+        
+        try:
+            relative_path = module_path.relative_to(root_path)
+        except ValueError:
+            logger.warning(
+                f"Module path {module_path} is not under project root {root_path}. Skipping workspace entry."
+            )
+            continue
+        
+        folder_path = f"./{relative_path.as_posix()}"
+        if folder_path not in seen_paths:
+            folder_entries.append({"path": folder_path})
+            seen_paths.add(folder_path)
+    
+    # Always include root folder
+    if "." not in seen_paths:
+        folder_entries.append({"path": "."})
+    
+    builder = WorkspaceBuilder(str(workspace_path))
+    builder.add_step(
+        WorkspaceBuildingStep(
+            target=[],
+            content={
+                "folders": folder_entries,
+                "settings": {
+                    "python.analysis.extraPaths": [
+                        root_path.as_posix(),
+                    ],
+                },
+            },
+        )
+    )
+    workspace_data = builder.build_workspace()
+    builder.write_workspace(workspace_data)
+    logger.info(f"Workspace file created at {workspace_path}")
+    return workspace_path
