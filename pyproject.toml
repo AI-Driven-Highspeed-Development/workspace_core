@@ -12,12 +12,7 @@ dependencies = [
 Repository = "https://github.com/AI-Driven-Highspeed-Development/workspace_core.git"
 
 [tool.adhd]
-type = "core"
 layer = "dev"
-
-[tool.uv.sources]
-logger-util = { git = "https://github.com/AI-Driven-Highspeed-Development/Logger-Util.git" }
-exceptions-core = { git = "https://github.com/AI-Driven-Highspeed-Development/exceptions_core.git" }
 
 [build-system]
 requires = ["hatchling"]
